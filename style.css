@@ -31,6 +31,7 @@ body.ready .loader { opacity: 0; visibility: hidden; }
 
 /* until the cable is plugged in: no scroll, no hint, no browser touch gestures */
 body:not(.entered) { overflow: hidden; touch-action: none; }
+html:has(body:not(.entered)) { overflow: hidden; overscroll-behavior: none; touch-action: none; }
 body:not(.entered) .track { height: 0; }
 body:not(.entered) .content, body:not(.entered) .outro, body:not(.entered) .hi { display: none; }
 

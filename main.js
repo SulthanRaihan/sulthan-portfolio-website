@@ -297,7 +297,7 @@ function startConnect(cs, heroTex) {
     if (done || !body.classList.contains("ready") || e.target.closest?.("button, a")) return;
     const p = toCanvas(e.clientX, e.clientY);
     if (!onPlug(p)) return;
-    drag = { dx: plug.x - p.x, dy: plug.y - p.y }; root.classList.add("grab"); kick();
+    drag = { dx: plug.x - p.x, dy: plug.y - p.y, x0: p.x, y0: p.y, moved: 0 }; root.classList.add("grab"); kick();
     if (e.cancelable) e.preventDefault();
   });
   addEventListener("pointermove", (e) => {
@@ -305,24 +305,33 @@ function startConnect(cs, heroTex) {
     const p = toCanvas(e.clientX, e.clientY);
     if (!drag) { root.classList.toggle("hand", !!onPlug(p)); return; }
     if (!p) return;
-    plug.x = p.x + drag.dx; plug.y = p.y + drag.dy;
+    plug.x = p.x + drag.dx; plug.y = p.y + drag.dy; drag.moved = Math.max(drag.moved, Math.hypot(p.x - drag.x0, p.y - drag.y0));
     if (dist() < 18 * reach) connect(); else kick();
   });
-  const release = () => {                                              // let go near the socket: it snaps in like a magnet
-    if (!drag || done) return;
-    drag = null; root.classList.remove("grab");
-    if (dist() < 45 * reach) connect(); else kick();
-  };
-  addEventListener("pointerup", release); addEventListener("pointercancel", release);
-  addEventListener("keydown", (e) => {                                 // keyboard: Enter / Space slides it in
-    if (done || !body.classList.contains("ready") || !["Enter", " "].includes(e.key)) return;
-    e.preventDefault();
+  let sliding = false;
+  const slideIn = () => {                                              // the plug glides into the socket on its own
+    if (done || sliding) return; sliding = true;
     const s = { ...plug }, t0 = performance.now();
     (function slide(now) {
       const t = Math.min(1, (now - t0) / 500), q = t * t * (3 - 2 * t);
       plug.x = s.x + (target.x - s.x) * q; plug.y = s.y + (target.y - s.y) * q; kick();
       if (t < 1) requestAnimationFrame(slide); else connect();
     })(t0);
+  };
+  const release = () => {                                              // let go near the socket: it snaps in like a magnet
+    if (!drag || done) return;
+    const tapped = drag.moved < 6;
+    drag = null; root.classList.remove("grab");
+    if (dist() < 45 * reach) connect(); else if (tapped) slideIn(); else kick();   // a plain tap on the plug plugs it in too
+  };
+  addEventListener("pointerup", release); addEventListener("pointercancel", release);
+  // phones (iOS Safari especially) start panning / rubber-banding the page under a finger drag and then cancel the pointer,
+  // so the plug snapped back. Nothing scrolls before the site is entered, so hold the page still until then.
+  const still = (e) => { if (!body.classList.contains("entered") && e.cancelable) e.preventDefault(); };
+  document.addEventListener("touchmove", still, { passive: false });
+  addEventListener("keydown", (e) => {                                 // keyboard: Enter / Space slides it in
+    if (done || !body.classList.contains("ready") || !["Enter", " "].includes(e.key)) return;
+    e.preventDefault(); slideIn();
   });
   draw(performance.now());
 }
