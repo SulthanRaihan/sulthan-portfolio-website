@@ -13,6 +13,7 @@ import { makePinboard } from "./pinboard.js";
 import { makeArchive, openPaper } from "./research.js";
 import { makeStationery } from "./desk-stationery.js";
 import { makeRadio } from "./music-radio.js";
+import { menuOpen, closeMenu } from "./music.js";
 
 const section = document.getElementById("outro");
 const reduce = matchMedia("(prefers-reduced-motion: reduce)").matches;
@@ -115,6 +116,7 @@ function init(R) {
 
   // ---------------------------------------------------------------- a cassette boombox between the lamp and the keyboard
   const radio = makeRadio(); radio.group.position.set(-0.98, 0, 0.5); radio.group.rotation.y = 0.38; scene.add(radio.group);
+  const radioTop = new THREE.Vector3(), radioAnchor = () => project(radio.topWorld(radioTop));   // the menu follows the radio on screen
 
   // ---------------------------------------------------------------- Aiko
   const aiko = makeAiko3D(); scene.add(aiko.root); aiko.root.visible = false;
@@ -140,7 +142,7 @@ function init(R) {
     { id: "plug", label: () => (state === "off" ? "Plug it back in" : "Unplug"), at: () => plug.localToWorld(wp.set(0, 0.12, 0)), act: () => (state === "off" ? plugIn() : unplug()) },
     { id: "lamp", label: () => (lampOn ? "Turn the lamp off" : "Turn the lamp on"), at: () => wp.set(-1.3, 1.5, 0.47), act: () => toggleLamp() },
     { id: "mug", label: "Take a sip", at: () => wp.set(1.25, 0.36, 0.85), act: () => sip() },
-    { id: "radio", label: () => radio.label(), at: () => radio.topWorld(wp), act: () => radio.click() },
+    { id: "radio", label: () => radio.label(), at: () => radio.topWorld(wp), act: () => radio.click(radioAnchor) },
     { id: "research", label: "Research archive", at: () => archive.topWorld(wp), act: () => openPaper("memvalid") },
   ];
   for (const s of SPOTS) {
@@ -170,6 +172,7 @@ function init(R) {
     const want = document.body.classList.contains("entered") ? clamp01(1 - r.top / innerHeight) : 0;
     k = reduce ? want : want * want * (3 - 2 * want);
     OUT.k = k; OUT.parallax = 0.5 * (1 - inside);
+    if (k < 0.9 && menuOpen()) closeMenu();                  // leaving the desk closes the boombox menu
     shrinkWorks(want);
     const active = k > 0.02;
     aiko.root.visible = active && state !== "inside";
@@ -239,7 +242,7 @@ function init(R) {
     const h = pick(e); if (!h) return;
     if (h.id === "pin") { pinAction(h.card.def); return; }
     if (h.id === "research") { setHot(null); openPaper(h.file); return; }
-    if (h.id === "radio") { radio.click(); return; }
+    if (h.id === "radio") { radio.click(radioAnchor); return; }
     if (h.id === "aiko") { if (chatOpen) { aiko.poke(); say("Hehe ♥"); } else openChat(); }
     else if (h.id === "look") lookInside();
     else if (h.id === "plug") state === "off" ? plugIn() : unplug();

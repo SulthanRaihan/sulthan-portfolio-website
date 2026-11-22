@@ -68,9 +68,9 @@ export function makeRadio() {
   return {
     group,
     pick(ray) { return ray.intersectObject(body, true).length > 0; },
-    label: () => (music.state().playing ? "Pause the music" : "Play some music"),
+    label: () => (music.state().playing ? `Boombox · ${music.state().track.title}` : "Open the boombox"),
     setHot(h) { hot = h; },
-    click() { music.toggle(); },
+    click(anchor) { music.toggleMenu(anchor); },
     topWorld(v) { return group.localToWorld(v.set(0, H + 0.12, 0)); },
     update(dt) {
       const on = music.state().playing;
