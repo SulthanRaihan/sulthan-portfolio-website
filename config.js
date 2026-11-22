@@ -95,6 +95,16 @@ export const CONFIG = {
     ],
   },
 
+  // Music (music.js): played through YouTube's own embedded player (it has to stay visible, at least 200×200, per
+  // YouTube's rules). The first track starts when the cable is plugged in at the start, if sound is on.
+  music: [
+    { id: "c_10qS7amjk", title: "Mean It", artist: "Lauv & LANY" },
+    { id: "_3GKsIFtEoE", title: "Coming Up Roses", artist: "Harry Styles" },
+    { id: "ApXoWvfEYVU", title: "Sunflower", artist: "Post Malone, Swae Lee" },
+    { id: "fE9trKOuT3Q", title: "spiral", artist: "LONGMAN" },
+    { id: "lwYw0jyxOys", title: "XXL", artist: "LANY" },
+  ],
+
   // The research archive on the desk (research.js): two folders in a file stand; each opens as a paper-style overview.
   research: [
     {

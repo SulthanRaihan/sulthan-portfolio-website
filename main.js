@@ -11,6 +11,7 @@ import { CONFIG } from "./config.js";
 import { makeConnectScreen, LAYOUT, LW, LH } from "./connect-screen.js";
 import { makeCrtMaterial, makeHeroTexture, bulgeUv } from "./crt.js";
 import * as sound from "./sound.js";
+import * as music from "./music.js";
 
 const $ = (id) => document.getElementById(id);
 const body = document.body, root = document.documentElement;
@@ -234,6 +235,7 @@ $("home").addEventListener("click", (e) => { e.preventDefault(); scrollTo({ top:
 $("snd").addEventListener("click", (e) => {
   const on = e.currentTarget.getAttribute("aria-pressed") !== "true";
   e.currentTarget.setAttribute("aria-pressed", String(on)); sound.setMuted(!on);
+  if (on) { if (body.classList.contains("entered")) music.play(); } else music.pause();   // the SOUND switch also runs the music
 });
 
 // ------------------------------------------------------------------ render loop
@@ -287,6 +289,7 @@ function startConnect(cs, heroTex) {
     done = true; drag = null; root.classList.remove("hand", "grab");
     Object.assign(plug, target); kick();
     sound.click(); setTimeout(sound.chime, 180);
+    if ($("snd").getAttribute("aria-pressed") === "true") music.play();   // plugged in → the first track (Mean It) starts, inside this gesture
     setTimeout(() => flicker(() => { crtMat.uniforms.map.value = heroTex; }, () => body.classList.add("entered")), 1100);
   };
 
