@@ -1,0 +1,85 @@
+/* (03) Journey: crumpled-paper canvas of giant rows (journey.js pans it). Colours are tokens: swap them for another mood
+   (e.g. --jr-bg: #c3f53c; --jr-ink: #0b3d0b for a lime/green look). */
+.jr { --jr-bg: #cfe6ff; --jr-ink: #061a2b; --jr-accent: #2f9bff; --jr-kraft: rgba(214, 176, 128, .82);
+  position: relative; z-index: 2; background: var(--jr-bg); }
+.jr-stage { position: sticky; top: 0; height: 100vh; overflow: hidden; background-color: var(--jr-bg);
+  /* crumpled paper: fractal noise lit from the top-left, laid over the colour */
+  background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='900' height='900'><filter id='c'><feTurbulence type='fractalNoise' baseFrequency='.008 .011' numOctaves='4' seed='7'/><feDiffuseLighting lighting-color='white' surfaceScale='3.2' diffuseConstant='1.05'><feDistantLight azimuth='225' elevation='52'/></feDiffuseLighting></filter><rect width='100%25' height='100%25' filter='url(%23c)'/></svg>");
+  background-size: 900px 900px; background-blend-mode: multiply; }
+.jr-label { position: absolute; left: var(--m, 6vw); bottom: 30px; z-index: 2; }
+.jr-canvas { position: absolute; left: 0; top: 0; width: 0; height: 0; will-change: transform; color: var(--jr-ink); }
+
+/* letters rise out of their masks */
+.jr .clip { display: inline-block; overflow: hidden; vertical-align: top; padding-top: .04em; margin-top: -.04em; }
+.jr .char { display: inline-block; transform: translateY(105%); transition: transform .9s cubic-bezier(.2, .8, .2, 1), color .25s; transition-delay: calc(var(--i) * 32ms); }
+.jr .in .char, .jr .in.jr-word .char { transform: none; }
+
+/* headline */
+.jr-title { position: absolute; text-align: center; width: max-content; max-width: 92vw; }
+.jr-tag { display: inline-block; margin: 0 0 18px; padding: 9px 16px 8px; background: var(--jr-ink); color: var(--jr-bg); border-radius: 4px;
+  font: 400 clamp(14px, 1.2vw, 20px)/1 var(--display); letter-spacing: .06em; text-transform: uppercase; transform: rotate(-2deg) rotateY(90deg); transition: transform .7s cubic-bezier(.3, 1.4, .5, 1) .2s; }
+.jr-title.in .jr-tag { transform: rotate(-2deg); }
+.jr-head { margin: 0; font: 400 clamp(56px, 8.2vw, 150px)/.9 var(--display); text-transform: uppercase; }
+.jr-head .line { display: block; white-space: nowrap; }
+
+/* rows */
+.jr-row { position: absolute; font-size: var(--fs, 300px); white-space: nowrap; }
+.jr-giant { margin: 0; display: flex; align-items: center; gap: .05em; font: 400 1em/.84 var(--display); text-transform: uppercase; position: relative; }
+.jr-word .clip:hover .char { transform: translateY(-5%) rotate(-3deg); color: var(--jr-accent); transition-delay: 0s; }
+.jr-index { position: absolute; left: -.42em; top: .02em; width: .3em; height: .3em; display: grid; place-items: center; }
+.jr-index svg { position: absolute; inset: 0; width: 100%; height: 100%; fill: none; stroke: var(--jr-ink); stroke-width: 2.4; stroke-dasharray: 1; stroke-dashoffset: 1; transition: stroke-dashoffset .9s ease .3s; }
+.jr-row.in .jr-index svg { stroke-dashoffset: 0; }
+.jr-index b { font: 700 .16em/1 "Caveat", cursive; }
+.jr-group { position: absolute; left: 0; top: calc(var(--fs) * -.3); margin: 0; padding: .32em .7em .28em; background: var(--jr-accent); color: #fff; border-radius: 4px;
+  font: 400 max(16px, calc(var(--fs) * .07))/1 var(--display); letter-spacing: .08em; text-transform: uppercase; transform: rotate(-3deg); }
+
+/* the photo between TO and the word, held by a strip of tape */
+.jr-slot { position: relative; display: inline-block; width: .9em; height: 1em; margin: 0 .04em; transform: rotate(var(--tilt)) scale(.6); opacity: 0;
+  transition: transform .9s cubic-bezier(.3, 1.4, .5, 1), opacity .5s; }
+.jr-slot.in { transform: rotate(var(--tilt)); opacity: 1; }
+.jr-slot img, .jr-photo2 img { display: block; width: 100%; height: 100%; object-fit: cover; border-radius: .1em; box-shadow: .05em .05em 0 rgba(6, 26, 43, .22); }
+.jr-tape { position: absolute; left: 50%; top: -.07em; width: .55em; height: .15em; translate: -50% 0; rotate: -3deg; background: var(--jr-kraft);
+  clip-path: polygon(0 8%, 4% 0, 8% 10%, 12% 0, 100% 0, 96% 12%, 100% 26%, 96% 40%, 100% 55%, 96% 70%, 100% 85%, 96% 100%, 0 100%, 4% 85%, 0 70%, 4% 55%, 0 40%, 4% 26%);
+  box-shadow: inset 0 0 0 100vmax rgba(255, 255, 255, .08); transform-origin: left; transform: scaleX(0); transition: transform .6s cubic-bezier(.2, .8, .2, 1) .45s; }
+.in > .jr-tape, .in .jr-tape { transform: none; }
+
+/* props around a row (positions in em of the giant size) */
+.jr-prop { position: absolute; opacity: 0; transform: translateY(.1em) rotate(var(--r, 0deg)); transition: opacity .6s, transform .9s cubic-bezier(.3, 1.3, .5, 1); }
+.jr-prop.in { opacity: 1; transform: rotate(var(--r, 0deg)); }
+.jr-photo2 { right: -.5em; top: -.62em; width: .62em; height: .76em; margin: 0; }
+.jr-photo2 .jr-tape { width: .4em; height: .11em; }
+.jr-badge { right: -.28em; top: .56em; width: .52em; height: .52em; }
+.jr-badge .b-out { fill: var(--jr-ink); } .jr-badge .b-in { fill: var(--jr-bg); }
+.jr-badge .b-ring { fill: var(--jr-bg); font: 600 15px "Inter", sans-serif; letter-spacing: 2px; }
+.jr-badge .b-mid { fill: var(--jr-ink); font: 400 38px "Anton", sans-serif; letter-spacing: 1px; }
+.jr-badge.in { animation: jr-spin 30s linear infinite; }
+@keyframes jr-spin { to { rotate: 360deg; } }
+.jr-info { left: calc(var(--fs) * 1.2); top: calc(var(--fs) * .95); width: clamp(250px, 22vw, 340px); padding: 26px 22px 20px; white-space: normal; background: #fffdf8; border-radius: 6px;
+  box-shadow: 0 18px 40px rgba(6, 26, 43, .18); font: 400 15px/1.45 var(--sans); color: var(--jr-ink); display: flex; flex-direction: column; gap: 4px; }
+.jr-info .jr-tape { width: 120px; height: 30px; top: -14px; }
+.jr-chip { align-self: flex-start; margin-bottom: 6px; padding: 6px 10px 5px; background: var(--jr-ink); color: #fff; border-radius: 30px; font: 500 11px/1 var(--mono); letter-spacing: .08em; text-transform: uppercase; }
+.jr-info b { font: 400 26px/1 var(--display); text-transform: uppercase; }
+.jr-city { color: rgba(6, 26, 43, .65); font-size: 14px; }
+.jr-years { font: 700 22px/1 "Caveat", cursive; color: var(--jr-accent); }
+.jr-info p { margin: 6px 0 0; }
+.jr-note { left: calc(var(--fs) * -.05); top: calc(var(--fs) * 1); margin: 0; display: flex; flex-direction: column; font: 700 max(22px, calc(var(--fs) * .085))/1.05 "Caveat", cursive; color: var(--jr-ink); --r: -4deg; }
+.jr-note::after { content: ""; display: block; width: 70%; height: .35em; margin-top: .1em;
+  background: no-repeat center/100% 100% url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 120 14'><path d='M2 9 C 30 3, 70 13, 118 5' fill='none' stroke='%23061a2b' stroke-width='2.4' stroke-linecap='round'/></svg>"); }
+
+/* hand-drawn arrows between rows */
+.jr-arrowbox { position: absolute; }
+.jr-arrow { width: 100%; height: auto; overflow: visible; fill: none; stroke: var(--jr-ink); stroke-width: 3; stroke-linecap: round; stroke-linejoin: round; }
+.jr-arrow path { stroke-dasharray: 1; stroke-dashoffset: 1; transition: stroke-dashoffset 1.1s cubic-bezier(.5, 0, .2, 1); }
+.jr-arrow .hd { transition-delay: .9s; transition-duration: .35s; }
+.jr-arrowbox.in .jr-arrow path { stroke-dashoffset: 0; }
+
+@media (max-width: 700px) {
+  .jr-info { width: 210px; padding: 20px 16px 14px; font-size: 13px; left: calc(var(--fs) * 1.6); }
+  .jr-info b { font-size: 20px; }
+  .jr-years { font-size: 19px; }
+  .jr-head { font-size: 15vw; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .jr .char, .jr-slot, .jr-prop, .jr-tape, .jr-arrow path, .jr-index svg, .jr-tag { transition-duration: .01s !important; transition-delay: 0s !important; }
+  .jr-badge.in { animation: none; }
+}

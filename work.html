@@ -1,0 +1,39 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#ffffff">
+  <title>All work — hello_world</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Anton&family=Instrument+Serif:ital@1&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@500;800&display=block" rel="stylesheet">
+  <link rel="stylesheet" href="style.css">
+  <link rel="stylesheet" href="about.css">
+  <link rel="stylesheet" href="works.css">
+  <link rel="stylesheet" href="work.css">
+  <script type="importmap">
+    { "imports": {
+      "three": "https://cdn.jsdelivr.net/npm/three@0.170.0/build/three.module.js",
+      "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.170.0/examples/jsm/"
+    } }
+  </script>
+</head>
+<body class="ready entered work-page">
+  <header class="top">
+    <a class="brand" href="index.html" aria-label="Back to the home page">hello<br>world</a>
+    <div class="who"><b id="who-name"></b><span id="who-role"></span></div>
+    <a class="back" href="index.html#work">← Back</a>
+  </header>
+  <main class="content work-main">
+    <div class="work-head sw-grid">
+      <p class="sw-label"><span>(04)</span> Work</p>
+      <h1 class="work-big">All work<sup id="count"></sup></h1>
+      <nav class="chips" id="chips" aria-label="Filter"></nav>
+    </div>
+    <div class="tiles" id="tiles"></div>
+  </main>
+  <script type="module" src="work-page.js"></script>
+  <script type="module" src="cursor.js"></script>
+</body>
+</html>

@@ -1,0 +1,75 @@
+/* (06) Say hi — cream paper, a rendered enamel mailbox, the letter flies in from the desk (sayhi.js) */
+.hi { --paper: #ece5d3; --ink: #1b1710; --ink2: rgba(27, 23, 16, .62); --line: rgba(27, 23, 16, .16);
+  position: relative; z-index: 8; min-height: 100vh; overflow: hidden; color: var(--ink); background-color: var(--paper);
+  background-image: radial-gradient(rgba(0, 0, 0, .035) 1px, transparent 1.2px), radial-gradient(rgba(255, 255, 255, .25) 1px, transparent 1.2px);
+  background-size: 7px 7px, 11px 11px; transition: background-color .8s ease, color .8s ease; }
+.hi[hidden] { display: none; }
+
+/* corners: who / where / when, and the links */
+.hi-info, .hi-links { position: absolute; top: clamp(110px, 16vh, 170px); display: flex; flex-direction: column; gap: 12px; font: 500 14px/1 var(--mono); letter-spacing: .16em; }
+.hi-info { left: clamp(20px, 7vw, 140px); color: var(--ink2); }
+.hi-info b { color: var(--ink); font-weight: 800; }
+.hi-links { right: clamp(20px, 7vw, 140px); align-items: flex-end; }
+.hi-links a, .hi-links button { padding: 0; border: 0; background: none; color: var(--ink2); font: inherit; letter-spacing: inherit; text-decoration: none; cursor: pointer; transition: color .2s; }
+.hi-links a:hover, .hi-links button:hover { color: var(--ink); text-decoration: underline; text-underline-offset: 5px; }
+
+/* the mailbox (rendered image) and its letter */
+.hi-center { display: flex; flex-direction: column; align-items: center; padding: clamp(110px, 16vh, 170px) 20px 90px; text-align: center; }
+.hi-center > * { opacity: calc(var(--in, 1) * 1.4 - .4); translate: 0 calc((1 - var(--in, 1)) * 40px); }
+.mb { position: relative; width: clamp(230px, 22vw, 320px); aspect-ratio: 760 / 912; }
+.mb-box { position: relative; z-index: 2; display: block; width: 100%; height: 100%; user-select: none; -webkit-user-drag: none; pointer-events: none;
+  filter: drop-shadow(0 26px 28px rgba(60, 45, 20, .22)) drop-shadow(0 4px 6px rgba(60, 45, 20, .12)); }
+/* the letter shows only above the slot's line; inside the box it is hidden */
+.mb-slot { position: absolute; z-index: 3; left: calc(var(--slot-x0) * 100% + 3%); right: calc((1 - var(--slot-x1)) * 100% + 3%); bottom: calc((1 - var(--slot-y)) * 100%);
+  height: 160%; clip-path: inset(-30% -40% 0 -40%); }
+.mb-letter { position: absolute; left: 0; right: 0; top: 100%; translate: 0 -76%; padding: 0; border: 0; background: none; cursor: grab; touch-action: none;
+  transition: transform .5s cubic-bezier(.3, 1.4, .5, 1), opacity .25s; filter: drop-shadow(0 6px 8px rgba(60, 45, 20, .2)); opacity: 0; }
+.hi.arrived .mb-letter { opacity: 1; }
+.mb-letter img { display: block; width: 100%; height: auto; user-select: none; -webkit-user-drag: none; pointer-events: none; }
+.mb.pushing .mb-letter { transition: none; cursor: grabbing; }
+.mb.sent .mb-letter { transform: translateY(115%) !important; transition: transform .45s cubic-bezier(.5, 0, .7, .4); }
+.mb-letter:hover { transform: translateY(5%); }
+.mb-letter:focus-visible { outline: 3px solid #b8862f; outline-offset: 4px; }
+/* a brass flap over the slot that swings when a letter goes through */
+.mb-flap { position: absolute; z-index: 4; left: calc(var(--slot-x0) * 100% + 2%); right: calc((1 - var(--slot-x1)) * 100% + 2%); top: calc(var(--slot-y) * 100% - 1.2%);
+  height: 1.6%; border-radius: 4px; transform-origin: 50% 0; opacity: 0; background: linear-gradient(#e9c873, #8a6120); transition: opacity .2s; }
+.mb.pushing .mb-flap, .mb.sent .mb-flap { opacity: 1; }
+.mb.sent .mb-flap { animation: mb-flap .9s ease; }
+@keyframes mb-flap { 20% { transform: rotateX(70deg); } 45% { transform: rotateX(-25deg); } 70% { transform: rotateX(12deg); } }
+.mb-tag { position: absolute; z-index: 5; left: 50%; top: -22%; width: max-content; max-width: 80vw; translate: -50% 10px; padding: 10px 14px; border-radius: 10px;
+  background: #1b1710; color: #f1e9d6; font: 500 13px var(--sans); opacity: 0; pointer-events: none; transition: opacity .25s, translate .35s cubic-bezier(.3, 1.4, .5, 1); }
+.mb-tag.on { opacity: 1; translate: -50% 0; pointer-events: auto; }
+.mb-tag a { color: #e9c873; }
+/* the way in: the letter on the dead tube, the cream flood, the scroll cue */
+.hi-flood { position: fixed; inset: 0; z-index: 7; pointer-events: none; background-color: #ece5d3;
+  background-image: radial-gradient(rgba(0, 0, 0, .035) 1px, transparent 1.2px), radial-gradient(rgba(255, 255, 255, .25) 1px, transparent 1.2px); background-size: 7px 7px, 11px 11px; }
+.hi-flyer { position: fixed; left: 0; top: 0; z-index: 60; pointer-events: none; will-change: transform; }
+.hi-flyer.rest { pointer-events: auto; cursor: pointer; }
+.hi-flyer img { display: block; width: 100%; height: auto; user-select: none; -webkit-user-drag: none;
+  filter: drop-shadow(0 18px 22px rgba(0, 0, 0, .3)); animation: hi-bob 3.2s ease-in-out infinite; }
+.hi-flyer.rest:hover img { filter: drop-shadow(0 22px 26px rgba(0, 0, 0, .34)) brightness(1.05); }
+@keyframes hi-bob { 50% { translate: 0 calc(var(--bob, 0) * -9px); rotate: calc(var(--bob, 0) * 2deg); } }
+/* it zooms out of the middle of the switched-off tube (the CRT has just collapsed to a dot there) */
+.hi-flyer.pop { animation: hi-pop .9s .15s cubic-bezier(.25, 1.35, .45, 1) backwards; }
+@keyframes hi-pop { from { scale: .04; opacity: 0; filter: brightness(2.4); } 35% { opacity: 1; } }
+.hi-flyer[hidden], .hi-flood[hidden], .hi-cue[hidden] { display: none; }
+.hi-cue { position: fixed; left: 0; top: 0; z-index: 59; display: flex; flex-direction: column; align-items: center; gap: 8px; padding: 6px 10px; border: 0; background: none;
+  color: #e9e3d4; font: 500 12px/1 var(--mono); letter-spacing: .22em; cursor: pointer; text-shadow: 0 2px 10px rgba(0, 0, 0, .6); }
+.hi-cue b { display: flex; flex-direction: column; align-items: center; gap: 8px; font: inherit; }
+.hi-cue.pop b { animation: hi-cue-in .9s .55s cubic-bezier(.25, 1.2, .45, 1) backwards; }
+@keyframes hi-cue-in { from { translate: 0 var(--rise, -120px); scale: .2; opacity: 0; } }
+.hi-cue i { font-style: normal; font-size: 20px; animation: hi-cue 1.6s ease-in-out infinite; }
+@keyframes hi-cue { 50% { translate: 0 7px; opacity: .55; } }
+
+.hi-hint { margin: 26px 0 0; font: 500 13px var(--mono); letter-spacing: .2em; color: var(--ink2); }
+.hi-center h2 { margin: clamp(60px, 9vh, 100px) 0 16px; font: 400 clamp(40px, 5.4vw, 86px)/1.02 "Instrument Serif", Georgia, serif; letter-spacing: -.01em; }
+.hi-sub { margin: 0; color: var(--ink2); font: 400 clamp(16px, 1.3vw, 20px) var(--sans); }
+.hi-foot { display: flex; justify-content: space-between; padding: 22px clamp(20px, 7vw, 140px) 30px; border-top: 1px solid var(--line); font: 500 12px var(--mono); letter-spacing: .12em; color: var(--ink2); }
+.hi-foot button { padding: 0; border: 0; background: none; color: inherit; font: inherit; letter-spacing: inherit; cursor: pointer; }
+.hi-foot button:hover { color: var(--ink); }
+
+@media (max-width: 860px) {
+  .hi-info, .hi-links { position: relative; top: auto; left: auto; right: auto; align-items: flex-start; padding: 36px 20px 0; }
+  .hi-center { padding-top: 40px; }
+}
+@media (prefers-reduced-motion: reduce) { .mb-letter, .mb-flap, .hi-flyer img, .hi-flyer.pop, .hi-cue.pop b, .hi-cue i { transition: none; animation: none; } }

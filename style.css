@@ -1,0 +1,74 @@
+:root {
+  --navy: #061a2b;
+  --ink: #d6ecff;
+  --blue: #2f9bff;
+  --night: #0d0b12;
+  --sans: "Inter", "Segoe UI", system-ui, sans-serif;
+  --mono: "JetBrains Mono", ui-monospace, monospace;
+  --display: "Anton", "Arial Narrow", sans-serif;
+}
+* { box-sizing: border-box; }
+html, body { margin: 0; background: var(--night); color: var(--ink); font-family: var(--sans); }
+html.hand, html.hand * { cursor: grab; }
+html.grab, html.grab * { cursor: grabbing !important; }
+.sr-only { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+
+/* ---------- loader: navy, cursor-following glow, huge gradient percentage bleeding off the bottom-left */
+.loader { position: fixed; inset: 0; z-index: 20; background: var(--navy); overflow: hidden;
+  transition: opacity .7s ease, visibility .7s; --gx: 50%; --gy: 50%; }
+.loader-glow { position: absolute; inset: 0; pointer-events: none;
+  background: radial-gradient(circle 32vw at var(--gx) var(--gy), rgba(214, 236, 255, .09), rgba(214, 236, 255, .03) 45%, transparent 70%); }
+.loader-top { position: absolute; left: 2.5vw; right: 2.5vw; top: max(20px, 2.6vw); display: flex; justify-content: space-between;
+  font: 500 clamp(12px, 1vw, 18px)/1 var(--mono); color: #e9f3ff; letter-spacing: .02em; }
+.loader-count { position: absolute; left: .6vw; bottom: -.1em; margin: 0; white-space: nowrap;
+  font: 400 clamp(200px, 36vw, 700px)/.86 var(--display); letter-spacing: -.01em;
+  background: radial-gradient(80% 100% at 0% 100%, #ffffff 0%, var(--ink) 100%); -webkit-background-clip: text; background-clip: text; color: transparent; }
+.loader-count b { font-weight: inherit; font-variant-numeric: tabular-nums; }
+body.ready .loader { opacity: 0; visibility: hidden; }
+
+/* ---------- 3D canvas */
+#scene { position: fixed; inset: 0; width: 100%; height: 100lvh; display: block; z-index: 0; }
+
+/* until the cable is plugged in: no scroll, no hint, no browser touch gestures */
+body:not(.entered) { overflow: hidden; touch-action: none; }
+body:not(.entered) .track { height: 0; }
+body:not(.entered) .content, body:not(.entered) .outro, body:not(.entered) .hi { display: none; }
+
+/* ---------- header */
+.top { position: fixed; top: 0; left: 0; right: 0; z-index: 10; display: flex; align-items: center; gap: 14px;
+  padding: max(18px, 1.8vw) max(16px, 2.4vw); pointer-events: none; }
+.top > * { pointer-events: auto; }
+.brand { font: 800 19px/.86 var(--mono); color: #fff; text-decoration: none; letter-spacing: -.04em; }
+.who { display: flex; flex-direction: column; font: 500 12px/1.35 var(--mono); }
+.who b { color: #fff; font-weight: 800; }
+.who span { color: rgba(214, 236, 255, .7); }
+.snd { margin-left: auto; display: flex; align-items: center; gap: 8px; height: 32px; padding: 0 14px; border-radius: 99px;
+  border: 1px solid rgba(255, 255, 255, .55); background: rgba(6, 26, 43, .35); color: #fff; font: 500 11px var(--mono);
+  text-transform: uppercase; letter-spacing: .06em; cursor: pointer; backdrop-filter: blur(6px); }
+.snd:hover { background: rgba(255, 255, 255, .12); }
+.snd-bars { display: flex; align-items: flex-end; gap: 2px; height: 10px; }
+.snd-bars i { width: 2px; background: currentColor; height: 40%; }
+.snd[aria-pressed="true"] .snd-bars i { animation: bar .9s ease-in-out infinite alternate; }
+.snd-bars i:nth-child(2) { animation-delay: -.3s !important; }
+.snd-bars i:nth-child(3) { animation-delay: -.6s !important; }
+.snd-bars i:nth-child(4) { animation-delay: -.15s !important; }
+@keyframes bar { from { height: 20%; } to { height: 100%; } }
+
+/* ---------- scroll hint */
+.hint { position: fixed; left: 50%; bottom: 22px; transform: translateX(-50%); z-index: 10; margin: 0;
+  padding: 9px 16px; border-radius: 99px; background: rgba(6, 26, 43, .7); backdrop-filter: blur(6px);
+  font: 500 12px var(--mono); color: #fff; transition: opacity .6s; }
+body:not(.entered) .hint, body.scrolled .hint { opacity: 0; pointer-events: none; }
+
+/* ---------- scroll track + the page after the intro */
+.track { position: relative; height: 320vh; }
+/* the page after the intro lives in about.css */
+
+@media (max-width: 700px) {
+  .who { display: none; }
+  .loader-count { font-size: 46vw; }
+  .hint { bottom: 16px; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .snd-bars i { animation: none !important; }
+}
