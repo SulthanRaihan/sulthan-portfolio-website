@@ -11,6 +11,16 @@
 @keyframes mp-blink { 50% { opacity: .35; } }
 .mp-head button { width: 24px; height: 24px; border: 1px solid rgba(255, 255, 255, .15); border-radius: 6px; background: none; color: #efe9dc; font: 400 14px/1 var(--sans); cursor: pointer; }
 .mp-head button:hover { background: rgba(255, 255, 255, .1); }
+.mp-mini-play, .mp-mini-next { display: none; }
+/* minimized: the player alone (200×200 is YouTube's minimum) under a slim control row */
+.mp.is-min { width: 224px; padding: 8px 12px 12px; transition: width .3s ease; }
+.mp.is-min .mp-head { margin-bottom: 6px; }
+.mp.is-min .mp-head b { overflow: hidden; white-space: nowrap; text-overflow: ellipsis; font-size: 0; }
+.mp.is-min .mp-head b::after { content: attr(data-now); font: 600 12px var(--sans); letter-spacing: 0; text-transform: none; color: #efe9dc; }
+.mp.is-min .mp-mini-play, .mp.is-min .mp-mini-next { display: inline-block; }
+.mp.is-min .mp-listbtn, .mp.is-min .mp-meta, .mp.is-min .mp-ctl, .mp.is-min .mp-list, .mp.is-min .mp-err { display: none; }
+.mp.is-min .mp-bar { margin: 8px 0 0; }
+.mp.is-min .mp-video, .mp.is-min .mp-video iframe { width: 200px; height: 200px; }
 .mp-video { width: 216px; height: 216px; border-radius: 8px; overflow: hidden; background: #000; box-shadow: inset 0 0 0 1px rgba(255, 255, 255, .1); }
 .mp-video iframe { display: block; width: 216px; height: 216px; border: 0; }
 .mp-meta { display: flex; flex-direction: column; gap: 2px; margin: 10px 2px 8px; }

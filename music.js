@@ -16,7 +16,10 @@ function buildCard() {
   card.className = "mp"; card.hidden = true; card.setAttribute("aria-label", "Music player");
   card.innerHTML = `
     <header class="mp-head"><span class="mp-dot"></span><b>Now playing</b>
+      <button type="button" class="mp-mini-play" data-act="toggle" aria-label="Play">▶</button>
+      <button type="button" class="mp-mini-next" data-act="next" aria-label="Next">⏭</button>
       <button type="button" class="mp-listbtn" aria-expanded="false" aria-label="Playlist">≡</button>
+      <button type="button" class="mp-min" aria-label="Minimize" title="Minimize">–</button>
       <button type="button" class="mp-x" aria-label="Stop and close">×</button></header>
     <div class="mp-video"><div id="mp-yt"></div></div>
     <div class="mp-meta"><b class="mp-title"></b><span class="mp-artist"></span></div>
@@ -29,20 +32,30 @@ function buildCard() {
     <ol class="mp-list" hidden>${LIST.map((t, i) => `<li><button type="button" data-i="${i}"><b>${esc(t.title)}</b><span>${esc(t.artist)}</span></button></li>`).join("")}</ol>
     <p class="mp-err" hidden></p>`;
   document.body.appendChild(card);
+  try { if (localStorage.getItem("mp-min") === "1") setMin(true); } catch {}
   card.addEventListener("click", (e) => {
     const b = e.target.closest("button"); if (!b) return;
     if (b.classList.contains("mp-x")) { pause(); card.hidden = true; return; }
+    if (b.classList.contains("mp-min")) { setMin(!card.classList.contains("is-min")); return; }
     if (b.classList.contains("mp-listbtn")) { const l = card.querySelector(".mp-list"); l.hidden = !l.hidden; b.setAttribute("aria-expanded", String(!l.hidden)); return; }
     if (b.dataset.i) { pick(+b.dataset.i); return; }
     ({ prev, next, toggle })[b.dataset.act]?.();
   });
+}
+// minimized: just the player (kept at 200×200, YouTube's minimum) and a slim row of controls; the music keeps going
+function setMin(on) {
+  card.classList.toggle("is-min", on);
+  const b = card.querySelector(".mp-min"); b.textContent = on ? "⤢" : "–"; b.setAttribute("aria-label", on ? "Expand" : "Minimize"); b.title = on ? "Expand" : "Minimize";
+  if (on) { card.querySelector(".mp-list").hidden = true; card.querySelector(".mp-listbtn").setAttribute("aria-expanded", "false"); }
+  try { localStorage.setItem("mp-min", on ? "1" : "0"); } catch {}
 }
 function paint() {
   if (!card) return;
   const t = LIST[index];
   card.querySelector(".mp-title").textContent = t.title;
   card.querySelector(".mp-artist").textContent = t.artist;
-  const pb = card.querySelector(".mp-play"); pb.textContent = playing ? "❚❚" : "▶"; pb.setAttribute("aria-label", playing ? "Pause" : "Play");
+  card.querySelector(".mp-head b").dataset.now = t.title;
+  for (const pb of card.querySelectorAll(".mp-play, .mp-mini-play")) { pb.textContent = playing ? "❚❚" : "▶"; pb.setAttribute("aria-label", playing ? "Pause" : "Play"); }
   card.classList.toggle("is-playing", playing);
   card.querySelectorAll(".mp-list button").forEach((b) => b.setAttribute("aria-current", String(+b.dataset.i === index)));
 }
