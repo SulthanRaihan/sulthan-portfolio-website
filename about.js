@@ -1,7 +1,7 @@
 // (01) About: split headline that comes out of a blur word by word, lines that drift with the scroll,
 // and the CV printer on the right (printer.js), loaded only when the section gets close.
 import { CONFIG } from "./config.js";
-import { drawCvPage } from "./cv-pages.js";
+import { drawCvPage, loadWorkImages } from "./cv-pages.js";
 import { pagesToPdf } from "./cv-pdf.js";
 
 const $ = (id) => document.getElementById(id);
@@ -86,7 +86,8 @@ async function loadPages() {
     })));
   }
   await Promise.all(['400 100px "Anton"', '400 30px "Inter"', '600 30px "Inter"', '800 30px "JetBrains Mono"'].map((f) => document.fonts.load(f).catch(() => {})));
-  return [drawCvPage(1, CONFIG), drawCvPage(2, CONFIG)];
+  const imgs = await loadWorkImages(CONFIG);
+  return [drawCvPage(1, CONFIG), drawCvPage(2, CONFIG, imgs)];
 }
 
 async function initPrinter() {

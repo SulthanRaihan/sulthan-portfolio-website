@@ -28,8 +28,10 @@ function footer(g, cfg) {
   g.fillStyle = NAVY; g.fillRect(0, H - 230, W, 230);
   g.font = '400 66px "Anton", sans-serif'; g.fillStyle = "#ffffff";
   g.fillText("PAPER IS THE PREVIEW.", M, H - 128);
-  g.fillStyle = BLUE; g.fillText(`THE REST IS AT ${cfg.cv.site.toUpperCase()}`, M, H - 52);
-  sparkle(g, W - M - 40, H - 118, 46, BLUE);
+  const rest = `THE REST IS AT ${cfg.cv.site.toUpperCase()}`, k = Math.min(1, (W - 2 * M) / g.measureText(rest).width);
+  g.save(); g.translate(M, H - 52); g.scale(k, 1); g.fillStyle = BLUE; g.fillText(rest, 0, 0); g.restore();   // squeeze a long address to fit
+  const w1 = g.measureText("PAPER IS THE PREVIEW.").width;
+  if (M + w1 + 140 < W - M) sparkle(g, W - M - 40, H - 168, 32, BLUE);          // the star sits beside the first line only
 }
 
 function page1(g, cfg) {
@@ -56,7 +58,7 @@ function page1(g, cfg) {
   footer(g, cfg);
 }
 
-function page2(g, cfg) {
+function page2(g, cfg, imgs = []) {
   topBar(g, cfg, 2);
   g.font = '600 56px "Inter", sans-serif'; g.fillStyle = INK; g.fillText("Selected work", M, 290);
   const tw = g.measureText("Selected work").width;
@@ -69,7 +71,16 @@ function page2(g, cfg) {
     const gr = g.createLinearGradient(x, y, x + tileW, y + tileH);
     gr.addColorStop(0, fills[i][0]); gr.addColorStop(1, fills[i][1]);
     g.fillStyle = gr; g.beginPath(); g.roundRect(x, y, tileW, tileH, 14); g.fill();
-    g.font = '400 120px "Anton", sans-serif'; g.fillStyle = "rgba(255,255,255,.85)"; g.fillText(String(i + 1).padStart(2, "0"), x + 22, y + tileH - 24);
+    const img = imgs[i];
+    if (img) {                                                    // the project's banner, cover-fitted into the tile
+      const k = Math.max(tileW / img.width, tileH / img.height), dw = img.width * k, dh = img.height * k;
+      g.save(); g.beginPath(); g.roundRect(x, y, tileW, tileH, 14); g.clip();
+      g.drawImage(img, x + (tileW - dw) / 2, y + (tileH - dh) / 2, dw, dh); g.restore();
+      g.fillStyle = "#061a2b"; g.beginPath(); g.roundRect(x + 12, y + tileH - 50, 54, 38, 8); g.fill();
+      g.font = '400 28px "Anton", sans-serif'; g.fillStyle = "#fff"; g.fillText(String(i + 1).padStart(2, "0"), x + 24, y + tileH - 20);
+    } else {
+      g.font = '400 120px "Anton", sans-serif'; g.fillStyle = "rgba(255,255,255,.85)"; g.fillText(String(i + 1).padStart(2, "0"), x + 22, y + tileH - 24);
+    }
     g.font = '600 28px "Inter", sans-serif'; g.fillStyle = INK; g.fillText(title, x, y + tileH + 46);
     g.font = '400 22px "Inter", sans-serif'; g.fillStyle = INK2; g.fillText(sub, x, y + tileH + 80);
   });
@@ -85,10 +96,20 @@ function page2(g, cfg) {
   footer(g, cfg);
 }
 
-export function drawCvPage(n, cfg) {
+// the banners of the projects named in cv.work (matched by title against works.projects), loaded before drawing page 2
+export function loadWorkImages(cfg) {
+  const projects = cfg.works?.projects || [];
+  return Promise.all(cfg.cv.work.slice(0, 6).map(([title]) => {
+    const p = projects.find((x) => x.title.toLowerCase() === title.toLowerCase());
+    if (!p?.image) return null;
+    return new Promise((ok) => { const i = new Image(); i.onload = () => ok(i); i.onerror = () => ok(null); i.src = p.image; });
+  }));
+}
+
+export function drawCvPage(n, cfg, imgs = []) {
   const c = document.createElement("canvas"); c.width = W; c.height = H;
   const g = c.getContext("2d");
   g.fillStyle = PAPER; g.fillRect(0, 0, W, H);
-  (n === 1 ? page1 : page2)(g, cfg);
+  (n === 1 ? page1 : page2)(g, cfg, imgs);
   return c;
 }
