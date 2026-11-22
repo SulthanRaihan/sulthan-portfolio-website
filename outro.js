@@ -10,6 +10,8 @@ import { greeting, suggestions, reply } from "./aiko-chat.js";
 import { bulgeUv } from "./crt.js";
 import { loadAiko } from "./aiko-cutout.js";
 import { makePinboard } from "./pinboard.js";
+import { makeArchive, openPaper } from "./research.js";
+import { makeStationery } from "./desk-stationery.js";
 
 const section = document.getElementById("outro");
 const reduce = matchMedia("(prefers-reduced-motion: reduce)").matches;
@@ -42,7 +44,7 @@ function init(R) {
     for (let i = 0; i < 7; i++) { g.beginPath(); g.ellipse(DW * 0.5, DH * 1.2, 300 + i * 140, 200 + i * 90, 0, 0, Math.PI * 2); g.stroke(); }
     g.fillStyle = "rgba(255,255,255,.88)"; g.fillRect(0, 0, DW, 58);                       // menu bar
     g.fillStyle = "#061a2b"; g.font = '700 28px "Inter", sans-serif'; g.textBaseline = "middle";
-    g.fillText("✦   hello_world      File      Edit      View      Go", 84, 30);
+    g.fillText("✦   Sulthan Raihan      File      Edit      View      Go", 84, 30);
     const time = new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
     g.textAlign = "right"; g.fillText(time, DW - 84, 30); g.textAlign = "left";
     // the welcome window
@@ -98,12 +100,17 @@ function init(R) {
   let pinboard = null;
   makePinboard().then((pb) => { pinboard = pb; pb.group.position.set(1.9, 1.22, -1.56); pb.group.scale.setScalar(1.12); scene.add(pb.group); }).catch((e) => console.warn("pin board", e));
 
-  // ---------------------------------------------------------------- desk dressing: plants + stationery, one file
-  // (Tiny Treats House Plants by Isa Lousberg, CC0 · ATELIER Desktop Props by yumeno3d, embedded per its licence)
-  import("three/addons/loaders/GLTFLoader.js").then(({ GLTFLoader }) => new GLTFLoader().loadAsync("assets/models/desk-props.glb")).then((g) => {
+  // ---------------------------------------------------------------- desk dressing: plants (Tiny Treats House Plants by
+  // Isa Lousberg, CC0) from one file, and stationery modelled here in code (desk-stationery.js)
+  scene.add(makeStationery());
+  import("three/addons/loaders/GLTFLoader.js").then(({ GLTFLoader }) => new GLTFLoader().loadAsync("assets/models/desk-plants.glb")).then((g) => {
     g.scene.traverse((o) => { if (o.isMesh) { o.castShadow = true; o.receiveShadow = true; } });
+    const cactus = g.scene.getObjectByName("plant_cactus"); if (cactus) { cactus.position.x += 0.3; cactus.position.z += 0.45; }   // make room for the archive
     scene.add(g.scene);
   }).catch((e) => console.warn("desk props not loaded", e));
+
+  // ---------------------------------------------------------------- the research archive: a file stand right of the monitor
+  const archive = makeArchive(); archive.group.position.set(1.36, 0, -0.18); archive.group.rotation.y = -0.5; archive.group.scale.setScalar(1.25); scene.add(archive.group);
 
   // ---------------------------------------------------------------- Aiko
   const aiko = makeAiko3D(); scene.add(aiko.root); aiko.root.visible = false;
@@ -129,6 +136,7 @@ function init(R) {
     { id: "plug", label: () => (state === "off" ? "Plug it back in" : "Unplug"), at: () => plug.localToWorld(wp.set(0, 0.12, 0)), act: () => (state === "off" ? plugIn() : unplug()) },
     { id: "lamp", label: () => (lampOn ? "Turn the lamp off" : "Turn the lamp on"), at: () => wp.set(-1.3, 1.5, 0.47), act: () => toggleLamp() },
     { id: "mug", label: "Take a sip", at: () => wp.set(1.25, 0.36, 0.85), act: () => sip() },
+    { id: "research", label: "Research archive", at: () => archive.topWorld(wp), act: () => openPaper("memvalid") },
   ];
   for (const s of SPOTS) {
     const b = document.createElement("button"); b.type = "button"; b.className = "ou-spot"; b.dataset.spot = s.id;
@@ -170,7 +178,7 @@ function init(R) {
     const e = easeIO(inside);
     OUT.pos.lerpVectors(tmpP, IN.pos, e); OUT.tgt.lerpVectors(tmpT, IN.tgt, e); OUT.fov = DESK.fov + (IN.fov - DESK.fov) * e;
     aiko.update(dt, now, camera);
-    pinboard?.update(dt);
+    pinboard?.update(dt); archive.update(dt);
     // diamonds + the bubble follow what they mark
     const here = k > 0.96 && state !== "inside";
     for (const s of SPOTS) {
@@ -193,6 +201,8 @@ function init(R) {
     if (aiko.hit(ray)) return { id: "aiko", label: chatOpen ? "Pat Aiko" : "Tap to talk to Aiko" };
     const card = pinboard?.pick(ray);
     if (card) return { id: "pin", card, label: card.def.label };
+    const file = archive.pick(ray);
+    if (file) return { id: "research", file: file.id, label: file.label };
     if (ray.intersectObjects(plug.children.concat(stripBody), false).length) return { id: "plug", label: state === "off" ? "Plug it back in" : "Pull the plug" };
     if (lampParts.length && ray.intersectObjects(lampParts, false).length) return { id: "lamp", label: lampOn ? "Turn the lamp off" : "Turn the lamp on" };
     if (ROOM.mug && ray.intersectObject(ROOM.mug, false).length) return { id: "mug", label: "Take a sip" };
@@ -211,7 +221,7 @@ function init(R) {
   });
   section.addEventListener("pointerleave", () => setHot(null));
   function setHot(h, e) {
-    hot = h; html.classList.toggle("hand", !!h); pinboard?.setHot(h?.card || null);
+    hot = h; html.classList.toggle("hand", !!h); pinboard?.setHot(h?.card || null); archive.setHot(h?.file || null);
     aiko.setHover(h?.id === "aiko");
     const scr = h?.screen || "";
     if (scr !== hotScreen) { hotScreen = scr; drawDesk(scr); }
@@ -222,6 +232,7 @@ function init(R) {
     if (!section.classList.contains("is-here") || e.target.closest(".ac, .ou-nav, .ou-spot, .ou-off, button, a, input")) return;
     const h = pick(e); if (!h) return;
     if (h.id === "pin") { pinAction(h.card.def); return; }
+    if (h.id === "research") { setHot(null); openPaper(h.file); return; }
     if (h.id === "aiko") { if (chatOpen) { aiko.poke(); say("Hehe ♥"); } else openChat(); }
     else if (h.id === "look") lookInside();
     else if (h.id === "plug") state === "off" ? plugIn() : unplug();

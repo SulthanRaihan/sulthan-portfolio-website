@@ -19,7 +19,7 @@ function sparkle(g, cx, cy, r, color) {
 }
 function topBar(g, cfg, n) {
   g.fillStyle = INK; g.font = '800 30px "JetBrains Mono", monospace'; g.textBaseline = "alphabetic";
-  g.fillText("hello", M, 118); g.fillText("world", M, 146);
+  g.fillText("Sulthan", M, 118); g.fillText("Raihan", M, 146);
   g.font = '500 22px "JetBrains Mono", monospace'; g.fillStyle = INK2; g.textAlign = "right";
   g.fillText(`CV — ${cfg.cv.year} · ${n}/2`, W - M, 140); g.textAlign = "left";
   g.fillStyle = "rgba(6,26,43,.14)"; g.fillRect(M, 186, W - 2 * M, 2);

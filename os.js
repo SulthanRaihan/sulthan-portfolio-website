@@ -90,7 +90,7 @@ const RENDER = {
     });
   },
   terminal(el) {
-    el.innerHTML = `<div class="os-term"><pre></pre><form><span>${esc(first.toLowerCase())}@hello_world ~ %</span><input aria-label="Command" autocomplete="off" spellcheck="false"></form></div>`;
+    el.innerHTML = `<div class="os-term"><pre></pre><form><span>${esc(first.toLowerCase())}@sulthan-raihan ~ %</span><input aria-label="Command" autocomplete="off" spellcheck="false"></form></div>`;
     const out = el.querySelector("pre"), form = el.querySelector("form"), input = form.querySelector("input"), hist = []; let hi = 0;
     const print = (s) => { out.textContent += `${s}\n`; out.parentElement.scrollTop = 1e9; };
     print(`Last login: ${new Date().toDateString()} on ttys000\nType 'help' to see what I can do.\n`);
@@ -112,7 +112,7 @@ const RENDER = {
     form.addEventListener("submit", (e) => {
       e.preventDefault(); const line = input.value.trim(); input.value = ""; if (!line) return;
       hist.push(line); hi = hist.length;
-      print(`${first.toLowerCase()}@hello_world ~ % ${line}`);
+      print(`${first.toLowerCase()}@sulthan-raihan ~ % ${line}`);
       const [c, ...args] = line.split(/\s+/), fn = CMD[c.toLowerCase()];
       const r = fn ? fn(args) : `zsh: command not found: ${c}`;
       if (r !== null) print(r);

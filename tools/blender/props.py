@@ -1,10 +1,12 @@
 # Desk dressing: picks props from the two packs, sizes them to the scene's desk (the room is ~3.1× real size),
 # places them in scene coordinates and exports ONE combined GLB (props embedded in the scene, not as separate assets).
-# blender -b -P props.py -- <packs_dir> <out.glb>
+# blender -b -P props.py -- <packs_dir> <out.glb> [name_prefix]
+# The public site uses: … assets/models/desk-plants.glb plant_   (CC0 plants only; the ATELIER pack may not be redistributed)
 import bpy, sys, math, os
 from mathutils import Vector
 argv = sys.argv[sys.argv.index("--") + 1:]
 PACKS, OUT = argv[0], argv[1]
+ONLY = argv[2] if len(argv) > 2 else ""                      # e.g. "plant_" → export only the CC0 plants (desk-plants.glb)
 AT = os.path.join(PACKS, "atelier/Atelier_Desk_Props/Individual_GLB")
 PL = os.path.join(PACKS, "plants/Tiny_Treats_House_Plants_1.0_FREE/Assets/gltf")
 REAL = 3.1                                                   # metres → scene units
@@ -23,6 +25,7 @@ PROPS = [
     ("clips", f"{AT}/08_Brass_paper_clips.glb", (0.32, 1.8), 20, ("scale", REAL), 0),
     ("ruler", f"{PACKS}/atelier/Atelier_Desk_Props/Optional_Compact_Extras/09_Ruler_Optimized.glb", (0.2, 2.0), -4, ("scale", REAL), 0),
 ]
+if ONLY: PROPS = [p for p in PROPS if p[0].startswith(ONLY)]
 bpy.ops.wm.read_factory_settings(use_empty=True)
 tops = {}
 for name, path, (x, z), rot, (mode, k), base in PROPS:

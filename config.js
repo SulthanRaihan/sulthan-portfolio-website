@@ -95,6 +95,47 @@ export const CONFIG = {
     ],
   },
 
+  // The research archive on the desk (research.js): two folders in a file stand; each opens as a paper-style overview.
+  research: [
+    {
+      id: "memvalid", code: "MV-01", tab: "MemVALID", kind: "Thesis", color: "#6d4bd8",
+      title: "MemVALID: Validity-Aware Labeling for Intent-Driven Memory Selection in Conversational Agents",
+      authors: "Sulthan Syafiq Raihan (苏睿涵)", affil: "School of Information Engineering, Nanjing Xiaozhuang University", period: "2026 – 2027",
+      status: "Method frozen (prompts-v4-frozen) · development pilot done · confirmatory test runs after the March 2027 freeze",
+      abstract: "Conversational agents answer from a long-term memory of past turns, but user facts change over time: a retrieved memory can be relevant to the question and still no longer be valid. Recent temporal-memory systems label or re-rank such memories yet still pass them to the generator — stale-evidence leakage. MemVALID is a training-free layer between retrieval and generation: a frozen LLM labels the question’s intent and each candidate’s relevance and temporal role, and deterministic rules keep only the memories that are valid for that intent. The thesis asks whether removing invalid memories helps beyond showing the same labels to the model, or beyond re-ranking.",
+      keywords: ["LLM agents", "long-term memory", "temporal validity", "retrieval-augmented generation", "evidence selection"],
+      figures: [{ src: "assets/research/memvalid-pipeline.webp", caption: "Figure 1. The MemVALID pipeline — memory construction, intent induction, validity-aware labeling and rule-based selection, then an evidence-grounded answer. (E) lists the evaluation conditions: cut points of the same pipeline with the same generator, prompt and judge." }],
+      sections: [
+        { h: "1. The problem", p: "January: “I drink tea every morning.” August: “I switched to coffee.” Asked now “What do I drink in the morning?”, an agent that retrieves both memories may still answer tea. Validity also depends on the question: for “What did I drink in January?” the tea memory is the valid one, so “always take the newest” is not enough." },
+        { h: "2. Method", list: ["Retrieve — bge-small-en-v1.5 returns the top-20 user turns (one memory = one user turn with its session date).", "Label — a frozen LLM (Qwen3-8B, temperature 0) classifies the intent (current / historical / evolution) and labels each candidate’s relevance R and temporal role T.", "Select — deterministic rules, no LLM: drop irrelevant memories, keep the temporal roles that match the intent, rank required ones first, keep at most 5, sort by date."] },
+        { h: "3. Evaluation", p: "Every condition shares the same retrieval, labels, generator and prompt; only the evidence differs. Primary comparison: MemVALID (C) vs labels-without-removal (B5); secondary: removal vs re-ranking (B6), predicted vs gold labels (D), and controls for context length and intent. Data: the knowledge-update subset of LongMemEval (dev 15 · test 52), a historical-question probe (~38) and a PersonaMem subset (80)." },
+        { h: "4. Development pilot (exploratory)", table: { head: ["Condition", "Current-state correct (of 12)", "Stale runs (of 36)", "Historical correct (of 2)", "Input tokens"], rows: [["B1 top-5", "~8", "9", "0", "491"], ["B5 labels, no removal", "~9", "9", "0–1", "2013"], ["B6 re-ranking", "10", "3", "0", "2013"], ["C MemVALID", "10", "3", "2", "407"]] },
+          note: "Qwen3-8B on 15 dev questions × 3 seeds; the prompts were tuned on these questions, so the numbers are optimistic by construction. Early reading: labels alone still leak stale evidence; removal is the only label-based condition that answers both historical questions, with ~80% fewer generator tokens than B5." },
+        { h: "5. Research integrity", list: ["Pre-registration through git — every protocol is committed before its results.", "Method freeze — the prompts-v4-frozen tag fixes prompts, parser, selector and conditions.", "Test lock — the runner refuses test splits until the freeze file exists.", "Human gold labels, a second annotator and a 30% audit of the LLM judge."] },
+      ],
+      links: [{ label: "GitHub · SulthanRaihan/memvalid", url: "https://github.com/SulthanRaihan/memvalid" }],
+    },
+    {
+      id: "lymph", code: "LN-02", tab: "LYMPH NODE", kind: "Research", color: "#c4432f",
+      title: "Medical Lymph Node Segmentation: Does the Global Dice Score See the Small Nodes?",
+      authors: "Sulthan Syafiq Raihan (苏睿涵)", affil: "Undergraduate research · 3D medical image segmentation", period: "2026 –",
+      status: "Stage 1 — dataset audit complete: 44 / 44 cases processed, 0 errors, 100% of CSV cells filled",
+      abstract: "Segmentation models for lymph nodes in CT are usually judged by the global Dice score. This project studies how well that score reflects whether individual annotated lymph nodes are actually detected — especially small ones. Before any model is trained, every case of the dataset is opened, validated and summarised, so that later results rest on data that is known to be correct.",
+      keywords: ["medical imaging", "3D segmentation", "CT", "lymph nodes", "evaluation metrics", "Dice vs lesion-wise recall"],
+      figures: [
+        { src: "assets/research/lymph-overview.webp", caption: "Figure 1. Dataset overview — ground-truth lymph-node volume per case (left) and the size distribution of the 233 connected components (right); only 17 are below the 8 mm small-node threshold." },
+        { src: "assets/research/lymph-qc.webp", caption: "Figure 2. Manual verification of MED_LYMPH_001 — CT in a soft-tissue window (L40/W400) with the ground-truth node contour in red, in axial, coronal and sagittal views." },
+      ],
+      sections: [
+        { h: "1. Research question", p: "To what extent does the global Dice score reflect a model’s ability to detect individual annotated lymph nodes, particularly small lymph nodes, in 3D CT? Planned comparison: case-level Dice vs lesion-wise recall, precision and F1, stratified by node size, on the predictions of a baseline 3D segmentation model." },
+        { h: "2. Data", p: "44 CT volumes (22 abdominal, 22 mediastinal) with lymph-node masks in NIfTI, a subset of the TCIA CT Lymph Nodes collection (Roth et al.). Reference paper: Bloom et al., Analysis of deep learning-based segmentation of lymph nodes on full-dose and reduced-dose body CT, Abdominal Radiology 51 (2026)." },
+        { h: "3. Audit results", list: ["44 / 44 cases processed, 0 errors, 27 columns filled with no missing values.", "Image–label pairs identical in shape, spacing and affine; median HU inside the masks 31–137 (soft tissue).", "Seven cases re-checked by independently written code (56 / 56 checks pass) and by visual review."] },
+        { h: "4. Findings that matter", list: ["Six patients appear twice (voxel-identical CT, abdomen vs mediastinum labels) — they must stay on the same side of any train/test split.", "One “node” is a ~9 cm mediastinal mass (239 ml) — keep, exclude or analyse separately.", "Few small nodes: only 17 of 233 components are under 8 mm (median 15.9 mm).", "Label IDs ≠ components (276 vs 233): lesion-wise metrics need an agreed definition of “one node”."] },
+      ],
+      links: [{ label: "GitHub · SulthanRaihan/medical-lymphnode-segmentation", url: "https://github.com/SulthanRaihan/medical-lymphnode-segmentation" }],
+    },
+  ],
+
   // (05) Back at the desk (outro.js): the room again, Aiko wandering on the desk; look inside the computer (os.js) or unplug it
   desk: {
     city: "Nanjing", timeZone: "Asia/Shanghai",                     // the clock in the menu bar inside the computer
