@@ -184,9 +184,26 @@ export function makeAiko3D() {
   // ---------------------------------------------------------------- the real model + its animation clips
   let model = null, mixer = null, current = null;
   const clips = {};
-  new GLTFLoader().loadAsync(MODEL_URL).then((g) => {
+  // phones can fail the first load under memory pressure (then she fell back to the old primitive chibi): try again
+  const loadModel = (tries = 3) => new GLTFLoader().loadAsync(MODEL_URL).catch((e) => {
+    if (tries <= 1) throw e;
+    return new Promise((ok) => setTimeout(ok, 2500)).then(() => loadModel(tries - 1));
+  });
+  loadModel().then((g) => {
     model = g.scene; model.scale.setScalar(1.05);
-    model.traverse((o) => { if (o.isMesh) { o.castShadow = true; o.frustumCulled = false; } });
+    const small = innerWidth < 800 || matchMedia("(pointer: coarse)").matches, done = new Set();
+    model.traverse((o) => {
+      if (!o.isMesh) return;
+      o.castShadow = true; o.frustumCulled = false;
+      for (const m of [].concat(o.material)) for (const k of ["map", "emissiveMap"]) {   // phones: 2048² → 1024² textures
+        const t = m?.[k], im = t?.image;
+        if (!small || !im || done.has(t) || Math.max(im.width, im.height) <= 1024) continue;
+        const c = document.createElement("canvas"), r = 1024 / Math.max(im.width, im.height);
+        c.width = Math.round(im.width * r); c.height = Math.round(im.height * r);
+        c.getContext("2d").drawImage(im, 0, 0, c.width, c.height);
+        t.image = c; t.needsUpdate = true; done.add(t);
+      }
+    });
     root.add(model); body.visible = false;
     mixer = new THREE.AnimationMixer(model);
     for (const c of g.animations) clips[c.name] = mixer.clipAction(c);

@@ -38,7 +38,22 @@ function buildCard() {
   tape.type = "button"; tape.className = "mp-tape"; tape.hidden = true; tape.setAttribute("aria-label", "Open the music player");
   tape.innerHTML = `<span class="mp-tape-body"><span class="mp-tape-label"><i></i></span><span class="mp-tape-win"><b></b><b></b></span></span>`;
   document.body.appendChild(tape);
-  tape.addEventListener("click", () => setTape(false));
+  // drag it up or down the edge so it never sits on top of something you want to tap; a plain tap opens the card
+  let ty = 0.5, dragY = null, moved = false;
+  try { const v = parseFloat(localStorage.getItem("mp-tape-y")); if (v >= 0 && v <= 1) ty = v; } catch {}
+  const placeTape = () => { tape.style.top = `${Math.round(Math.min(innerHeight - 48, Math.max(48, ty * innerHeight)))}px`; };
+  placeTape(); addEventListener("resize", placeTape);
+  tape.addEventListener("pointerdown", (e) => { dragY = { y: e.clientY, top: tape.getBoundingClientRect().top + tape.offsetHeight / 2 }; moved = false; tape.setPointerCapture(e.pointerId); });
+  tape.addEventListener("pointermove", (e) => {
+    if (!dragY) return;
+    const dy = e.clientY - dragY.y;
+    if (!moved && Math.abs(dy) < 6) return;
+    moved = true; tape.classList.add("is-drag");
+    ty = (dragY.top + dy) / innerHeight; placeTape();
+  });
+  const drop = () => { if (!dragY) return; dragY = null; tape.classList.remove("is-drag"); if (moved) try { localStorage.setItem("mp-tape-y", ty.toFixed(3)); } catch {} };
+  tape.addEventListener("pointerup", drop); tape.addEventListener("pointercancel", drop);
+  tape.addEventListener("click", (e) => { if (moved) { e.preventDefault(); moved = false; return; } setTape(false); });
   try { if (localStorage.getItem("mp-tape") === "1") card.classList.add("is-tape"); } catch {}
   card.addEventListener("click", (e) => {
     const b = e.target.closest("button"); if (!b) return;

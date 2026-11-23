@@ -23,6 +23,17 @@ CH.forEach((ch, i) => { const b = document.createElement("button"); b.type = "bu
 const near = new IntersectionObserver(([e]) => { if (e.isIntersecting) { near.disconnect(); init(); } }, { rootMargin: "200% 0px" });
 near.observe(root);
 
+// cards are small on screen: cap each texture so ~40 photos fit in a phone's GPU memory (full-size photos used ~350 MB
+// with mipmaps, and iPhones silently dropped them — only the small skill cards showed)
+const TEX_MAX = innerWidth < 800 || matchMedia("(pointer: coarse)").matches ? 640 : 1280;
+function fitTexture(pic) {
+  const w = pic.naturalWidth || pic.width, h = pic.naturalHeight || pic.height, k = TEX_MAX / Math.max(w, h);
+  if (k >= 1) return pic;
+  const c = document.createElement("canvas"); c.width = Math.round(w * k); c.height = Math.round(h * k);
+  const g = c.getContext("2d"); g.imageSmoothingQuality = "high"; g.drawImage(pic, 0, 0, c.width, c.height);
+  return c;
+}
+
 async function init() {
   const stage = root.querySelector(".works-stage"), canvas = root.querySelector(".works-gl"), copy = root.querySelector(".works-copy");
   const titleEl = copy.querySelector(".works-title"), subEl = copy.querySelector(".works-sub"), viewAll = copy.querySelector(".works-btn");
@@ -80,6 +91,7 @@ async function init() {
       m.visible = false;
       spiral.add(m); cards.push(m);
       cardPicture(it, i).then((pic) => {                              // textures go to the GPU one per frame
+        pic = fitTexture(pic);
         const t = pic instanceof HTMLCanvasElement ? new THREE.CanvasTexture(pic) : new THREE.Texture(pic);
         t.colorSpace = THREE.SRGBColorSpace; t.anisotropy = 4; t.needsUpdate = true;
         const asp = pic.width / pic.height, s = it.type === "skill" ? 1.3 : 1.9;
