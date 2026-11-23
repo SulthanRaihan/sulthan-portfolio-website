@@ -150,5 +150,40 @@ export function makeConnectScreen(config) {
     tex.needsUpdate = true;
   }
   draw();
-  return { tex, draw };
+
+  // standby: the computer was unplugged at the desk and the visitor scrolled back up here — a dim "no signal" screen
+  // with the cable lying loose, the monitor asleep, and a blinking arrow pointing back down to the desk
+  const sCap = document.createElement("canvas"); sCap.width = LW; sCap.height = LH;
+  const sg = sCap.getContext("2d");
+  pixelText(sg, config.standby?.[0] || "NO SIGNAL", 180, 24, "#cfe3f7");
+  pixelText(sg, config.standby?.[1] || "SCROLL DOWN TO PLUG ME IN", 212, 16, "#a9c6e4");
+  let lastS = -1;
+  function standby(time = 0) {
+    const f = Math.floor(time * 2);                          // 2 frames a second: the zZ and the arrow blink
+    if (f === lastS) return; lastS = f; lastKey = "";
+    const { mon, port, globe, socket } = LAYOUT, on = f % 2 === 0;
+    g.fillStyle = COL.navy; g.fillRect(0, 0, LW, LH);
+    sprite(g, MONITOR, mon.x, mon.y, { X: COL.dim, S: COL.off });
+    g.fillStyle = on ? COL.ink : COL.dim;                     // sleepy zZ above the monitor
+    pixelZ(g, mon.x + 52, mon.y - 22, 3); pixelZ(g, mon.x + 66, mon.y - 34, 2);
+    sprite(g, GLOBE, globe.x, globe.y, { X: COL.off });
+    g.fillStyle = COL.off;
+    g.fillRect(socket.x - 6, socket.y - 8, 12, 2); g.fillRect(socket.x - 6, socket.y + 6, 12, 2);
+    g.fillRect(socket.x - 6, socket.y - 8, 2, 16); g.fillRect(socket.x + 4, socket.y - 8, 2, 16);
+    const end = { x: 150, y: 150 };                           // the plug lies on the floor, out of the socket
+    cable(g, port, { x: end.x, y: end.y + 7 }, 30, COL.dim);
+    sprite(g, PLUG, end.x, end.y, { X: COL.dim, B: COL.deep });
+    g.drawImage(sCap, 0, 0);
+    if (on) {                                                 // blinking arrow ↓
+      g.fillStyle = COL.blue; const ax = LW / 2 - 1, ay = 238;
+      g.fillRect(ax - 1, ay, 4, 12);
+      for (let k = 0; k < 6; k++) g.fillRect(ax - 6 + k, ay + 7 + k, 14 - 2 * k, 1);
+    }
+    h.drawImage(lo, 0, 0, hi.width, hi.height);
+    tex.needsUpdate = true;
+  }
+  return { tex, draw, standby };
+}
+function pixelZ(g, x, y, s) {                                 // a little pixel "Z", s px per cell
+  for (let i = 0; i < 4; i++) { g.fillRect(x + i * s, y, s, s); g.fillRect(x + i * s, y + 3 * s, s, s); g.fillRect(x + (3 - i) * s, y + i * s, s, s); }
 }

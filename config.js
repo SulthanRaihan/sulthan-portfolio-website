@@ -15,6 +15,7 @@ export const CONFIG = {
 
   // pixel captions on the "plug me in" screen (uppercase A–Z, digits, spaces)
   connect: ["DRAG THE CABLE", "TO GO ONLINE"],
+  standby: ["NO SIGNAL", "SCROLL DOWN TO PLUG ME IN"],   // the tube after the computer was unplugged at the desk
 
   // the first real screen on the monitor
   pill: "hello, world",

@@ -174,6 +174,12 @@ function init(R) {
     OUT.k = k; OUT.parallax = 0.5 * (1 - inside);
     if (k < 0.9 && menuOpen()) closeMenu();                  // leaving the desk closes the boombox menu
     shrinkWorks(want);
+    // unplugged, then scrolled back up to the start: wake the tube into a dim "no signal" standby screen
+    if (state === "off") {
+      const up = k < 0.5;
+      if (up) { if (crtMat.uniforms.map.value !== cs.tex) crtMat.uniforms.map.value = cs.tex; cs.standby(now / 1000); }
+      crtMat.uniforms.off.value = up ? 0 : 1; OUT.power = up ? 0.6 : 0;
+    }
     const active = k > 0.02;
     aiko.root.visible = active && state !== "inside";
     section.classList.toggle("is-here", k > 0.96 && state !== "inside");
