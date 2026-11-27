@@ -39,58 +39,66 @@ export function makeCrtMaterial(map) {
   });
 }
 
-function roundRect(g, x, y, w, h, r) {
-  g.beginPath(); g.moveTo(x + r, y); g.arcTo(x + w, y, x + w, y + h, r); g.arcTo(x + w, y + h, x, y + h, r);
-  g.arcTo(x, y + h, x, y, r); g.arcTo(x, y, x + w, y, r); g.closePath();
-}
-function inkGradient(g, x, y, w, h) {
-  const grad = g.createRadialGradient(x, y + h, 0, x, y + h, Math.hypot(w * 0.8, h));
-  grad.addColorStop(0, "#ffffff"); grad.addColorStop(1, "#d6ecff");
-  return grad;
-}
-
 // The screen that appears after the cable is plugged in. 1440×1080 = 4:3 glass.
+// A code-editor / terminal look built around the site's logo: the "Sulthan / Raihan" mark top left, a status pill,
+// the headline as a prompt line with a block cursor, a code comment with the eras, and an editor status bar.
 export function makeHeroTexture(config) {
-  const W = 1440, H = 1080;
+  const W = 1440, H = 1080, M = "JetBrains Mono", BLUE = "#2f9bff", ICE = "#d6ecff", DIM = "#5f83a6";
   const c = document.createElement("canvas"); c.width = W; c.height = H;
   const g = c.getContext("2d");
   g.fillStyle = "#061a2b"; g.fillRect(0, 0, W, H);
+  const glow = g.createRadialGradient(W * 0.3, H * 0.55, 0, W * 0.3, H * 0.55, W * 0.75);
+  glow.addColorStop(0, "rgba(47,155,255,.22)"); glow.addColorStop(0.5, "rgba(47,155,255,.06)"); glow.addColorStop(1, "rgba(47,155,255,0)");
+  g.fillStyle = glow; g.fillRect(0, 0, W, H);
+  g.fillStyle = "rgba(214,236,255,.075)";                               // dot grid
+  for (let y = 18; y < H; y += 36) for (let x = 18; x < W; x += 36) g.fillRect(x - 1.5, y - 1.5, 3, 3);
+  // a faint giant </> in the corner
+  g.save(); g.globalAlpha = 0.05; g.fillStyle = ICE; g.font = `800 330px "${M}"`; g.textAlign = "right"; g.textBaseline = "alphabetic";
+  g.fillText("</>", W - 110, H - 200); g.restore();
 
-  // giant faint watermark
-  g.save();
-  g.globalAlpha = 0.07; g.fillStyle = "#d6ecff";
-  g.font = '400 900px "Anton", sans-serif'; g.textBaseline = "middle"; g.textAlign = "center";
-  g.fillText(config.watermark.toUpperCase(), W / 2, H / 2 + 40);
-  g.restore();
+  // logo block, top left — the same mark as the site header
+  const lx = 150, ly = 150;
+  g.fillStyle = "#ffffff"; g.font = `800 66px "${M}"`; g.textBaseline = "alphabetic";
+  const tight = (txt, x, y, sp) => { let cx = x; for (const ch of txt) { g.fillText(ch, cx, y); cx += g.measureText(ch).width + sp; } return cx; };
+  const w1 = tight("Sulthan", lx, ly + 52, -3), w2 = tight("Raihan", lx, ly + 52 + 57, -3);
+  const dx = Math.max(w1, w2) + 34;
+  g.fillStyle = "rgba(214,236,255,.25)"; g.fillRect(dx, ly + 4, 2, 104);
+  g.font = `500 27px "${M}"`; g.fillStyle = ICE;
+  g.fillText(`${config.nameZh || ""} · ${config.role || "software engineer"}`, dx + 30, ly + 42);
+  g.fillStyle = DIM; g.fillText("nanjing, cn — gmt+8", dx + 30, ly + 88);
 
-  // pill: glass ring → blue core → label, with a little cursor hanging off its corner
-  g.font = '500 54px "Inter", sans-serif'; g.textBaseline = "alphabetic";
-  const tw = g.measureText(config.pill).width;
-  const px = 150, py = 230, pw = Math.round(tw + 100), ph = 104;
-  roundRect(g, px, py, pw, ph, ph / 2); g.fillStyle = "rgba(255,255,255,0.18)"; g.fill();
-  roundRect(g, px + 10, py + 10, pw - 20, ph - 20, (ph - 20) / 2); g.fillStyle = "#2f9bff"; g.fill();
-  g.save();
-  roundRect(g, px + 10, py + 10, pw - 20, ph - 20, (ph - 20) / 2); g.clip();
-  g.filter = "blur(30px)"; g.fillStyle = "rgba(255,255,255,.5)";
-  g.beginPath(); g.ellipse(px + pw * 0.3, py + 20, pw * 0.3, 18, -0.15, 0, Math.PI * 2); g.fill();
-  g.restore();
-  g.fillStyle = inkGradient(g, px + 50, py + 30, tw, 44);
-  g.fillText(config.pill, px + 50, py + 70);
-  g.save();                                                   // cursor arrow
-  g.translate(px + pw - 30, py + ph - 26); g.rotate(-0.25);
-  g.fillStyle = "#2f9bff"; g.strokeStyle = "#d6ecff"; g.lineWidth = 5; g.lineJoin = "round";
-  g.beginPath(); g.moveTo(0, 0); g.lineTo(0, 60); g.lineTo(16, 46); g.lineTo(28, 70); g.lineTo(38, 65); g.lineTo(26, 41); g.lineTo(46, 40); g.closePath();
-  g.fill(); g.stroke();
-  g.restore();
+  // status pill, top right
+  g.font = `500 25px "${M}"`; const pt = "available for work", pw = g.measureText(pt).width + 82, px = W - 150 - pw, py = ly + 22;
+  g.beginPath(); g.roundRect(px, py, pw, 58, 29); g.strokeStyle = "rgba(214,236,255,.35)"; g.lineWidth = 2; g.stroke();
+  g.fillStyle = "#3ddc84"; g.beginPath(); g.arc(px + 32, py + 29, 8, 0, 7); g.fill();
+  g.fillStyle = ICE; g.fillText(pt, px + 54, py + 38);
 
-  // headline: tall condensed caps, tight leading, same white→ice-blue gradient as the loader
-  const size = 280, lh = size * 0.9, top = 385, maxW = W - 300;
-  g.font = `400 ${size}px "Anton", sans-serif`;
-  g.fillStyle = inkGradient(g, 150, top, maxW, lh * config.headline.length);
-  config.headline.forEach((line, i) => {
-    const k = Math.min(1, maxW / g.measureText(line).width);
-    g.save(); g.translate(150, top + size * 0.82 + lh * i); g.scale(k, k); g.fillText(line, 0, 0); g.restore();
-  });
+  // the headline as a prompt: "> I build things" / "that think▌"
+  const [l1, l2] = config.headline;
+  let size = 124; g.font = `800 ${size}px "${M}"`;
+  const maxW = W - 300, wide = Math.max(g.measureText("> " + l1).width, g.measureText(l2).width + size * 0.7);
+  if (wide > maxW) { size = Math.floor(size * maxW / wide); g.font = `800 ${size}px "${M}"`; }
+  const hx = 150, y1 = 520, y2 = y1 + size * 1.08, sp = -size * 0.035;
+  g.fillStyle = BLUE; let x = tight(">", hx, y1, sp) + size * 0.3;
+  g.fillStyle = "#ffffff"; tight(l1, x, y1, sp);
+  const words = l2.split(" "), last = words.pop(), lead = words.length ? words.join(" ") + " " : "";
+  g.fillStyle = "#ffffff"; x = tight(lead, hx, y2, sp);
+  const grad = g.createLinearGradient(x, 0, x + size * 3, 0); grad.addColorStop(0, BLUE); grad.addColorStop(1, "#8fd0ff");
+  g.fillStyle = grad; x = tight(last, x, y2, sp);
+  g.fillStyle = BLUE; g.fillRect(x + size * 0.08, y2 - size * 0.74, size * 0.5, size * 0.84);   // block cursor
+
+  // the eras as a code comment
+  g.font = `500 31px "${M}"`; g.fillStyle = DIM;
+  const eras = (config.portrait?.eras || []).map(([n]) => n.toLowerCase()).join(" · ");
+  g.fillText(`// ${eras || "full-stack · mobile · ai"}`, hx, y2 + 96);
+
+  // editor status bar
+  const by = H - 170;
+  g.fillStyle = "rgba(214,236,255,.14)"; g.fillRect(150, by, W - 300, 2);
+  g.font = `500 23px "${M}"`; g.fillStyle = DIM;
+  g.fillText("~/sulthan-raihan", 150, by + 44);
+  g.fillStyle = BLUE; g.fillText("● main", 150 + g.measureText("~/sulthan-raihan  ").width, by + 44);
+  g.fillStyle = DIM; g.textAlign = "right"; g.fillText("ln 1, col 1   utf-8   scroll ↓", W - 150, by + 44); g.textAlign = "left";
 
   const tex = new THREE.CanvasTexture(c);
   tex.colorSpace = THREE.SRGBColorSpace; tex.anisotropy = 8;

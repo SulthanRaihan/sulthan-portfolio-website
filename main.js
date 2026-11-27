@@ -352,7 +352,7 @@ function flicker(swap, done) {
 // ------------------------------------------------------------------ boot
 async function init() {
   progress(5);
-  await Promise.all(['400 100px "Anton"', '400 24px "Silkscreen"', '500 54px "Inter"', '800 19px "JetBrains Mono"'].map((f) => document.fonts.load(f).catch(() => {})));
+  await Promise.all(['400 100px "Anton"', '400 24px "Silkscreen"', '500 54px "Inter"', '800 19px "JetBrains Mono"', '500 19px "JetBrains Mono"'].map((f) => document.fonts.load(f).catch(() => {})));
   progress(35);
   buildRoom();
   progress(60);

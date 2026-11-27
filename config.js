@@ -19,7 +19,7 @@ export const CONFIG = {
 
   // the first real screen on the monitor
   pill: "hello, world",
-  headline: ["I BUILD THINGS", "THAT THINK"],
+  headline: ["I build things", "that think"],
   watermark: "hello",
 
   // (01) About — big headline lines: [text, start column (1–12), sideways drift with scroll]
