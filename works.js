@@ -189,11 +189,12 @@ async function init() {
     spiral.rotation.z = -camZ * 0.045;                                  // cards sweep along the spiral as we fly
     let busy = false;
     const eye = camZ + 1.5, dt = Math.min(0.05, lastT ? (now - lastT) / 1000 : 0.016); lastT = now;
-    splash.update(dt, now, { burst: smooth(0.05, 0.8, s.docked), eye, motion: reduce ? 0 : 1 });
+    const burst = smooth(0.05, 0.8, s.docked), reveal = smooth(0.32, 0.6, burst);   // cards wait until the mascot has popped
+    splash.update(dt, now, { burst, eye, motion: reduce ? 0 : 1 });
     if (!reduce) busy = true;                                           // the mascot types and the props spin while it's in view
     for (const m of cards) {
       const t = m.userData.ready ? clamp01((now - m.userData.ready) / 600) : 0, d = eye - m.position.z;
-      const o = t * smooth(20, 13, d) * smooth(0.2, 1.2, d);
+      const o = t * smooth(20, 13, d) * smooth(0.2, 1.2, d) * reveal;
       m.visible = o > 0.002; m.material.opacity = o;
       if (t > 0 && t < 1) busy = true;
       const h = m === hovered ? 1 : 0;                                 // hover: the card comes forward a little

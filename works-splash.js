@@ -161,16 +161,30 @@ export function makeSplash({ origin, zones, count, size = 1, mascotScale = 1 }) 
     m.rotation.copy(m.userData.rot0);
     props.add(m); list.push(m);
   }
+  // the flash of the pop: a soft orange-white glow sprite
+  const fc = document.createElement("canvas"); fc.width = fc.height = 256;
+  { const x = fc.getContext("2d"), gr = x.createRadialGradient(128, 128, 0, 128, 128, 128);
+    gr.addColorStop(0, "rgba(255,255,255,1)"); gr.addColorStop(0.25, "rgba(255,200,160,.9)"); gr.addColorStop(0.6, "rgba(217,119,87,.35)"); gr.addColorStop(1, "rgba(217,119,87,0)");
+    x.fillStyle = gr; x.fillRect(0, 0, 256, 256); }
+  const ft = new THREE.CanvasTexture(fc); ft.colorSpace = THREE.SRGBColorSpace;
+  const flash = new THREE.Sprite(new THREE.SpriteMaterial({ map: ft, transparent: true, depthWrite: false, blending: THREE.AdditiveBlending }));
+  flash.position.set(origin.x, origin.y + 0.35, origin.z + 0.2); flash.visible = false;
+  props.add(flash);
   const from = new THREE.Vector3(origin.x, origin.y + 0.2, origin.z + 0.6), tmp = new THREE.Vector3();
   let time = 0;
   // burst 0 → 1: the props shoot out of the keyboard to their spots; eye: the camera's z
   function update(dt, now, { burst, eye, motion }) {
     time += dt * motion;
     const dm = eye - origin.z;
-    const gone = smooth(0.12, 0.45, burst);                         // it ducks away as the splash comes out
-    mascot.group.scale.setScalar(mascotScale * (1 - gone) + 0.0001);
-    mascot.group.position.y = origin.y - gone * 0.6;
+    // the pop: it puffs up and shakes (burst 0.08 → 0.3), then bursts in a flash (0.3 → 0.4) and the props fly out
+    const puff = smooth(0.08, 0.3, burst), gone = smooth(0.3, 0.4, burst);
+    const shake = puff * (1 - gone) * 0.05;
+    mascot.group.scale.setScalar(mascotScale * (1 + puff * 0.35) * (1 - gone) + 0.0001);
+    mascot.group.position.set(origin.x + Math.sin(now * 0.09) * shake, origin.y + Math.cos(now * 0.11) * shake, origin.z);
     mascot.group.visible = gone < 0.99 && dm > 0.3 && dm < 24;
+    const fl = smooth(0.28, 0.36, burst) * (1 - smooth(0.36, 0.55, burst));
+    flash.visible = fl > 0.01; flash.material.opacity = fl; flash.scale.setScalar(0.5 + smooth(0.28, 0.55, burst) * 4.5);
+    burst = clamp01((burst - 0.3) / 0.7);                            // the props only leave once it has popped
     mascot.update(dt, now, motion * (1 - smooth(0.6, 1, burst) * 0.6));
     for (const m of list) {
       const u = m.userData, k = easeOut(clamp01((burst - u.delay) / (1 - u.delay)));
