@@ -73,7 +73,7 @@ async function init() {
   const cards = [], uploads = [];
   const LEN = CH.map((ch) => Math.max(4, ((ITEMS[ch.key] || []).length - 1) * STEP));
   const STATION = []; LEN.reduce((z, l, c) => { STATION[c] = z; return z - l - TRAVEL; }, 0);
-  const W8 = LEN.map((l) => 1 + l / 10), W_IN = 0.8, W8SUM = W_IN + W8.reduce((a, b) => a + b, 0);
+  const W8 = LEN.map((l) => 1 + l / 10), W_IN = 1.6, W8SUM = W_IN + W8.reduce((a, b) => a + b, 0);
   // TAIL: one more screen at the end where the stage stays pinned and shrinks into the desk's monitor (outro.js), with
   // the desk section overlapping it (outro.css pulls it up by 100vh)
   const TAIL = document.getElementById("outro") ? 1 : 0;
@@ -130,7 +130,9 @@ async function init() {
   let enter = 0;
   const state = (p) => {
     let u = Math.max(0, p * W8SUM - W_IN), c = 0;
-    const docked = clamp01((p * W8SUM) / W_IN), open = (enter + docked) / 2;
+    // intro run (docked 0 → 1): the first ~third is a pause where only the mascot types and the camera holds still;
+    // then it pops, the cards come out and the camera flies in
+    const docked = clamp01((p * W8SUM) / W_IN), open = (enter + smooth(0.32, 1, docked)) / 2;
     while (c < CH.length - 1 && u > W8[c]) { u -= W8[c]; c++; }
     const f = clamp01(u / W8[c]), last = c === CH.length - 1;
     const drift = LEN[c] * (last ? 0.5 : 0.85) * smooth(0, last ? 1 : 0.7, f);   // rest: drift slowly down this chapter (the last one
@@ -138,7 +140,7 @@ async function init() {
     const travel = last ? 0 : ease(smooth(0.7, 1, f));                   // then rush to the next station
     const z = STATION[c] - drift - travel * (STATION[c] - drift - (STATION[c + 1] ?? 0)) + (1 - open) * INTRO;
     const out = 1 - smooth(0.3, 0.42, f);
-    let show = c, alpha = (c === 0 ? smooth(0.55, 0.95, docked) : 1) * out;   // the first title waits for the mascot to go
+    let show = c, alpha = (c === 0 ? smooth(0.75, 1, docked) : 1) * out;   // the first title waits for the mascot to go
     if (!last && f > 0.42) { show = c + 1; alpha = smooth(18, 15, z + 1.5 - (STATION[c + 1] - 3)); }
     return { c: show, z, roll: (c + travel) * 0.7 + f * 0.15, alpha, docked };
   };
@@ -189,7 +191,7 @@ async function init() {
     spiral.rotation.z = -camZ * 0.045;                                  // cards sweep along the spiral as we fly
     let busy = false;
     const eye = camZ + 1.5, dt = Math.min(0.05, lastT ? (now - lastT) / 1000 : 0.016); lastT = now;
-    const burst = smooth(0.05, 0.8, s.docked), reveal = smooth(0.32, 0.6, burst);   // cards wait until the mascot has popped
+    const burst = smooth(0.3, 0.95, s.docked), reveal = smooth(0.32, 0.6, burst);   // cards wait until the mascot has popped
     splash.update(dt, now, { burst, eye, motion: reduce ? 0 : 1 });
     if (!reduce) busy = true;                                           // the mascot types and the props spin while it's in view
     for (const m of cards) {
