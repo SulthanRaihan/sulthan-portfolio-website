@@ -5,6 +5,7 @@ import * as THREE from "three";
 import { CONFIG } from "./config.js";
 import { allItems, cardPicture } from "./works-data.js";
 import { openDetail } from "./modal.js";
+import { makeSplash } from "./works-splash.js";
 
 const STEP = 0.46;       // depth between two cards of one chapter's spiral
 const TRAVEL = 12;       // empty run to the next chapter, so its cards stay hidden behind this title
@@ -72,7 +73,7 @@ async function init() {
   const cards = [], uploads = [];
   const LEN = CH.map((ch) => Math.max(4, ((ITEMS[ch.key] || []).length - 1) * STEP));
   const STATION = []; LEN.reduce((z, l, c) => { STATION[c] = z; return z - l - TRAVEL; }, 0);
-  const W8 = LEN.map((l) => 1 + l / 10), W_IN = 0.45, W8SUM = W_IN + W8.reduce((a, b) => a + b, 0);
+  const W8 = LEN.map((l) => 1 + l / 10), W_IN = 0.8, W8SUM = W_IN + W8.reduce((a, b) => a + b, 0);
   // TAIL: one more screen at the end where the stage stays pinned and shrinks into the desk's monitor (outro.js), with
   // the desk section overlapping it (outro.css pulls it up by 100vh)
   const TAIL = document.getElementById("outro") ? 1 : 0;
@@ -101,6 +102,15 @@ async function init() {
     });
   });
 
+  // the intro: a little crab typing at a keyboard; scrolling in bursts desk-toy props out of it, which then float
+  // between the cards down the whole tunnel (works-splash.js)
+  scene.add(new THREE.HemisphereLight(0xe4ecff, 0x1b2440, 1.5));
+  const sun = new THREE.DirectionalLight(0xffffff, 1.8); sun.position.set(2.5, 4, 6); scene.add(sun);
+  const small = innerWidth < 800 || matchMedia("(pointer: coarse)").matches;
+  const splash = makeSplash({ origin: new THREE.Vector3(0, -0.6, 3.0), zones: CH.map((_, c) => [c ? STATION[c] + 1 : 1, STATION[c] - LEN[c] - 3]),
+    count: small ? 32 : 52, size: 1.7, mascotScale: small ? 0.8 : 1 });
+  scene.add(splash.mascot, splash.props);
+
   // layout
   let W = 1, H = 1, visible = false, dirty = true;
   const resize = () => {
@@ -128,9 +138,9 @@ async function init() {
     const travel = last ? 0 : ease(smooth(0.7, 1, f));                   // then rush to the next station
     const z = STATION[c] - drift - travel * (STATION[c] - drift - (STATION[c + 1] ?? 0)) + (1 - open) * INTRO;
     const out = 1 - smooth(0.3, 0.42, f);
-    let show = c, alpha = (c === 0 ? smooth(0.25, 0.6, open) : 1) * out;
+    let show = c, alpha = (c === 0 ? smooth(0.55, 0.95, docked) : 1) * out;   // the first title waits for the mascot to go
     if (!last && f > 0.42) { show = c + 1; alpha = smooth(18, 15, z + 1.5 - (STATION[c + 1] - 3)); }
-    return { c: show, z, roll: (c + travel) * 0.7 + f * 0.15, alpha };
+    return { c: show, z, roll: (c + travel) * 0.7 + f * 0.15, alpha, docked };
   };
   dots.forEach((b, i) => b.addEventListener("click", () => {
     const span = root.offsetHeight - (1 + TAIL) * innerHeight, before = W8.slice(0, i).reduce((a, b) => a + b, 0);
@@ -163,11 +173,11 @@ async function init() {
   });
 
   // render
-  let raf = 0, camZ = INTRO, lastZ = camZ, blur = 0, shown = -1;
+  let raf = 0, camZ = INTRO, lastZ = camZ, blur = 0, shown = -1, lastT = 0;
   function loop() { if (!raf) raf = requestAnimationFrame(frame); }
   function frame(now) {
     raf = 0;
-    if (!visible) return;
+    if (!visible) { lastT = 0; return; }
     enter = clamp01(1 - root.getBoundingClientRect().top / innerHeight);
     if (uploads.length) { const [m, t] = uploads.shift(); renderer.initTexture(t); m.material.map = t; m.material.needsUpdate = true; m.userData.ready = now; }
     const s = state(progress());
@@ -178,7 +188,9 @@ async function init() {
     camera.rotation.z += (s.roll - camera.rotation.z) * 0.14;
     spiral.rotation.z = -camZ * 0.045;                                  // cards sweep along the spiral as we fly
     let busy = false;
-    const eye = camZ + 1.5;
+    const eye = camZ + 1.5, dt = Math.min(0.05, lastT ? (now - lastT) / 1000 : 0.016); lastT = now;
+    splash.update(dt, now, { burst: smooth(0.05, 0.8, s.docked), eye, motion: reduce ? 0 : 1 });
+    if (!reduce) busy = true;                                           // the mascot types and the props spin while it's in view
     for (const m of cards) {
       const t = m.userData.ready ? clamp01((now - m.userData.ready) / 600) : 0, d = eye - m.position.z;
       const o = t * smooth(20, 13, d) * smooth(0.2, 1.2, d);
